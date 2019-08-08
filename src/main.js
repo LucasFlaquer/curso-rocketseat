@@ -2,10 +2,10 @@ import api from './api';
 
 class App {
   constructor() {
-    this.repositories = [];
-    this.formElm = document.getElementById('repo-form');
-    this.listElm = document.getElementById('repo-list');
-    this.inputElm = document.querySelector('input[name=repository]');
+    this.users = [];
+    this.formElm = document.getElementById('user-form');
+    this.listElm = document.getElementById('user-list');
+    this.inputElm = document.querySelector('input[name=user]');
     this.registerHandlers();
   }
   registerHandlers() {
@@ -18,31 +18,35 @@ class App {
 
     if(repoInput.length === 0)
       return;
-    
-    const response = await api.get(`/repos/${repoInput}`);
-    const {name, description, html_url, owner:{avartar_url}} = response;
-    this.repositories.push({
-      name,
-      description,
-      avartar_url,
-      html_url
-    });
-    this.inputElm.value = '';
-    console.log(this.repositories);
-    
-    this.render();
+    this.setLoading();
+    try {
+      const response = await api.get(`/users/${repoInput}`);
+      const {name, bio, html_url, avatar_url} = response.data;
+      this.users.push({
+        name,
+        bio,
+        avatar_url,
+        html_url
+      });
+      this.inputElm.value = '';
+      console.log(this.users);
+      this.render();
+    } catch(err) {
+      alert('repositorio nao existe');
+    }
+    this.setLoading(false);
   }
   render() {
     this.listElm.innerHTML = '';
-    this.repositories.forEach(repo => {
+    this.users.forEach(repo => {
       let imgEl = document.createElement('img');
-      imgEl.setAttribute('src', repo.avartar_url);
+      imgEl.setAttribute('src', repo.avatar_url);
 
       let titleEl = document.createElement('h2');
       titleEl.appendChild(document.createTextNode(repo.name));
       
-      let descriptionEl = document.createElement('p');
-      descriptionEl.appendChild(document.createTextNode(repo.description));
+      let biografyEl = document.createElement('p');
+      biografyEl.appendChild(document.createTextNode(repo.bio));
       
       let linkEl = document.createElement('a');
       linkEl.setAttribute('target', '_blank');
@@ -52,10 +56,20 @@ class App {
       let listItem = document.createElement('li');
       listItem.appendChild(imgEl);
       listItem.appendChild(titleEl);
-      listItem.appendChild(descriptionEl);
+      listItem.appendChild(biografyEl);
       listItem.appendChild(linkEl);
       this.listElm.appendChild(listItem);
     });
+  }
+  setLoading(loading = true) {
+    if(loading === true) {
+      let loadingElm = document.createElement('span');
+      loadingElm.appendChild(document.createTextNode('Carregando'));
+      loadingElm.setAttribute('id', 'loading');
+      this.formElm.appendChild(loadingElm);
+    } else {
+      document.getElementById('loading').remove();
+    }
   }
 }
 
